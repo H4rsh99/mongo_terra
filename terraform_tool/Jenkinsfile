@@ -1,0 +1,37 @@
+pipeline {
+    agent any
+    parameters {
+        choice(name: 'What_do_you_want', choices: ['Create', 'Destroy'], description: 'Select the environment')
+    }
+    tools {
+        terraform 'terraform'
+    }
+    stages {
+        
+        stage('checkout') {
+            steps {
+                // git branch: 'root_module', url: 'https://github.com/dxjangra/terraform_tool.git'
+                checkout scmGit(branches: [[name: '*/root_module']], extensions: [], userRemoteConfigs: [[credentialsId: 'edf516e7-b73d-4fb9-97c2-1db0ca2139e5', url: 'https://github.com/dxjangra/terraform_tool.git']])
+           
+            }
+        }
+        stage('terra-init') {
+            steps {
+                sh 'terraform init -reconfigure'
+            }
+        }
+        stage('terra-apply') {
+            when { expression { params.What_do_you_want == 'Create' } }
+            steps {
+                sh 'terraform apply --auto-approve'
+            }
+        }
+        stage('terra-destroy') {
+            when { expression { params.What_do_you_want == 'Destroy' } }
+                       
+            steps {
+                sh 'terraform destroy --auto-approve'
+            }
+        }
+    }
+}
